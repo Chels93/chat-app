@@ -1,0 +1,31 @@
+React Native App with Navigation
+
+This React Native project demonstrates the use of navigation between two screens, with customization of screen backgrounds and dynamic content passed between the screens. The app also includes basic text input handling and a demonstration of a scrollable view.
+
+Project Structure
+
+The project contains the following files and components:
+
+    •	App.js: The main entry point of the application that sets up navigation between two screens (Screen1 and Screen2). It also includes additional UI elements for text input, displaying text, and demonstrating a scrollable view.
+    •	Screen1.js: The first screen in the app where the user can enter their name and select a background color. This screen allows the user to navigate to Screen2 with their chosen name and background color.
+    •	Screen2.js: The second screen that displays a personalized welcome message to the user, using the name and background color passed from Screen1. It also updates the navigation bar title with the user’s name.
+
+    Components Overview
+
+App.js
+
+    •	Navigation: The app uses React Navigation to navigate between Screen1 and Screen2.
+    •	Text Input and Display: The app allows users to input text, which can then be displayed or alerted.
+    •	ScrollView: Demonstrates a scrollable view with oversized text to show the scrolling functionality.
+
+Screen1.js
+
+    •	Name Input: A text input field where the user can type their name.
+    •	Background Color Selection: A selection of color options is presented as buttons. The chosen color will be applied to the background of Screen2.
+    •	Navigation: A button navigates the user to Screen2, passing along the name and selected background color.
+
+Screen2.js
+
+    •	Dynamic Navigation Title: The screen’s navigation title is dynamically set to the user’s name using the useEffect hook.
+    •	Personalized Message: Displays a welcome message using the user’s name.
+    •	Custom Background Color: The background color of the screen is set to the color selected by the user on Screen1.
