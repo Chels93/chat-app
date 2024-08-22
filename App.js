@@ -18,12 +18,40 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   // State to hold the text input value
-  [text, setText] = useState("");
+  const [text, setText] = useState("");
 
   // Function to alert the user input (`text` state's value)
   const alertMyText = () => {
     Alert.alert(text);
   };
+
+  // A custom screen component that includes the UI elements
+  const CustomScreen = () => (
+    <View style={styles.container}>
+      {/* Text input for user to type something */}
+      <TextInput
+        style={styles.textInput}
+        value={text}
+        onChangeText={setText}
+        placeholder="Type something here."
+      />
+      {/* Display the text entered by the user */}
+      <Text style={styles.textDisplay}>You wrote: {text}</Text>
+      {/* Button to trigger the alert with the user input */}
+      <Button
+        onPress={() => {
+          alertMyText();
+        }}
+        title="Press Me"
+      />
+      {/* Scrollable view to demonstrate scrolling with large content */}
+      <ScrollView>
+        <Text style={{ fontSize: 110 }}>
+          This text is so big! And so long! You have to scroll!
+        </Text>
+      </ScrollView>
+    </View>
+  );
 
   return (
     // Wrap the app with NavigationContainer for screen navigation
@@ -34,32 +62,8 @@ const App = () => {
         <Stack.Screen name="Screen1" component={Screen1} />
         {/* Define the second screen in the stack */}
         <Stack.Screen name="Screen2" component={Screen2} />
-        
-        {/* Additional UI elements below the screens */}
-        <View>
-          {/* Text input for user to type something */}
-          <TextInput
-            style={styles.textInput}
-            value={text}
-            onChangeText={setText}
-            placeholder="Type something here."
-          />
-          {/* Display the text entered by the user */}
-          <Text style={styles.textDisplay}>You wrote: {text}</Text>
-          {/* Button to trigger the alert with the user input */}
-          <Button
-            onPress={() => {
-              alertMyText();
-            }}
-            title="Press Me"
-          />
-          {/* Scrollable view to demonstrate scrolling with large content */}
-          <ScrollView>
-            <Text style={{ fontSize: 110 }}>
-              This text is so big! And so long! You have to scroll!
-            </Text>
-          </ScrollView>
-        </View>
+        {/* Add the custom screen as another screen in the stack */}
+        <Stack.Screen name="CustomScreen" component={CustomScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
