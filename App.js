@@ -7,27 +7,33 @@ import {
   Button,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Start from "./components/Start";
 import Chat from "./components/Chat";
 
-// Create the navigator for screen navigation
+// Create the stack navigator for screen navigation
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   // State to hold the text input value
   const [text, setText] = useState("");
 
-  // Function to alert the user input (`text` state's value)
+  // Function to display an alert with the user input (`text` state's value)
   const alertMyText = () => {
-    Alert.alert(text);
+    Alert.alert("Alert", text || "No text entered");
   };
 
   // A custom screen component that includes the UI elements
   const CustomScreen = () => (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"} // Adjust behavior for iOS/Android
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Offset adjustment for keyboard
+    >
       {/* Text input for user to type something */}
       <TextInput
         style={styles.textInput}
@@ -50,37 +56,38 @@ const App = () => {
           This text is so big! And so long! You have to scroll!
         </Text>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 
   return (
     // Wrap the app with NavigationContainer for screen navigation
     <NavigationContainer>
       {/* Navigator to manage the stack of screens */}
-      <Stack.Navigator initialRouteName="Screen1">
-        {/* Define the first screen in the stack */}
+      <Stack.Navigator initialRouteName="Start">
+        {/* Define the Start screen */}
         <Stack.Screen
-          name="Screen1"
+          name="Start"
           component={Start}
-          options={{ title: "Welcome to Screen 1" }} // Set screen title
+          options={{ title: "Welcome to Start" }} // Screen title for Start
         />
-        {/* Define the second screen in the stack */}
+        {/* Define the Chat screen */}
         <Stack.Screen
-          name="Screen2"
+          name="Chat"
           component={Chat}
-          options={{ title: "Welcome to Screen 2" }} // Set screen title
+          options={{ title: "Welcome to Chat" }} // Screen title for Chat
         />
         {/* Add the custom screen as another screen in the stack */}
         <Stack.Screen
           name="CustomScreen"
           component={CustomScreen}
-          options={{ title: "Custom Screen" }} // Set screen title
+          options={{ title: "Custom Screen" }} // Screen title for CustomScreen
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
 
+// Styles for various components in the app
 const styles = StyleSheet.create({
   container: {
     flex: 1,

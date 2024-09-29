@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, ImageBackground } from "react-native";
+import { StyleSheet, ImageBackground, KeyboardAvoidingView, Platform } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
 
 const Chat = ({ route, navigation }) => {
-  const { name, bgColor } = route.params || {}; // Default to empty object if params are undefined
+  const { name = "User", bgColor = "#fff" } = route.params || {}; // Default values if no params provided
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    // Set the chat title to the user's name in the navigation bar
     if (name) {
       navigation.setOptions({ title: name });
     }
 
-    // Set initial messages
+    // Set initial messages when the component mounts
     setMessages([
       {
         _id: 1,
@@ -20,29 +21,29 @@ const Chat = ({ route, navigation }) => {
         user: {
           _id: 2,
           name: "Chatbot",
-          avatar: "https://placeimg.com/140/140/any", // Random image as the chatbot's avatar
+          avatar: "https://placeimg.com/140/140/any", // Random avatar image for the chatbot
         },
       },
       {
         _id: 2,
         text: "You’ve entered the chat.",
         createdAt: new Date(),
-        system: true, // This message is a system message
+        system: true, // System message
       },
       {
         _id: 3,
-        text: "Hey, it's great to be here!",
+        text: `Hey ${name}, it's great to be here!`,
         createdAt: new Date(),
         user: {
-          _id: 1, // This message is from the current user
-          name: name || "User",
+          _id: 1, // Message from the current user
+          name: name,
         },
       },
     ]);
   }, [name, navigation]);
 
   const onSend = (newMessages = []) => {
-    // Append new messages to the existing list
+    // Append the new messages to the existing list of messages
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, newMessages)
     );
@@ -54,15 +55,20 @@ const Chat = ({ route, navigation }) => {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={[styles.container, { backgroundColor: bgColor || "#fff" }]}>
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: bgColor }]} // Set the chosen background color
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
         <GiftedChat
-          messages={messages} // Feeding messages from the messages state
-          onSend={(newMessages) => onSend(newMessages)}
+          messages={messages} // Messages to display
+          onSend={(newMessages) => onSend(newMessages)} // Handle sending new messages
           user={{
-            _id: 1, // The current user's ID
+            _id: 1, // Current user's ID
+            name: name, // Display the user's name in the chat
           }}
         />
-      </View>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
