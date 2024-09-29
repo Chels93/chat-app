@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, ImageBackground } from "react-native";
+import { StyleSheet, View, ImageBackground } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
 
 const Chat = ({ route, navigation }) => {
@@ -20,7 +20,7 @@ const Chat = ({ route, navigation }) => {
         user: {
           _id: 2,
           name: "Chatbot",
-          avatar: "https://placeimg.com/140/140/any",
+          avatar: "https://placeimg.com/140/140/any", // Random image as the chatbot's avatar
         },
       },
     ]);
@@ -40,12 +40,12 @@ const Chat = ({ route, navigation }) => {
       resizeMode="cover"
     >
       <View style={[styles.container, { backgroundColor: bgColor || "#fff" }]}>
-      <GiftedChat 
-        messages={messages}
-        onSend={(newMessages) => onSend(newMessages)}
-        user={{
-            _id: 1, 
-        }}
+        <GiftedChat
+          messages={messages}
+          onSend={(newMessages) => onSend(newMessages)}
+          user={{
+            _id: 1, // The current user's ID
+          }}
         />
       </View>
     </ImageBackground>
