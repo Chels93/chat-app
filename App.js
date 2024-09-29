@@ -1,56 +1,53 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; // Importing React and useState hook
 import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  Button,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  StyleSheet, // StyleSheet for defining component styles
+  View, // View is a container component for layout
+  Text, // Text component to display text
+  TextInput, // TextInput for user input
+  Button, // Button for user interaction
+  Alert, // Alert for displaying alerts/dialogs
+  ScrollView, // ScrollView for scrollable content
+  KeyboardAvoidingView, // A view to manage keyboard display issues
+  Platform, // Platform to determine the OS (iOS or Android)
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Start from "./components/Start";
-import Chat from "./components/Chat";
 
-// Create the stack navigator for screen navigation
+import { NavigationContainer } from "@react-navigation/native"; // Container for navigation functionality
+import { createNativeStackNavigator } from "@react-navigation/native-stack"; // Stack navigator for screen transitions
+import Start from "./components/Start"; // Importing Start screen component
+import Chat from "./components/Chat"; // Importing Chat screen component
+
+// Create the stack navigator for handling screen navigation
 const Stack = createNativeStackNavigator();
 
 const App = () => {
-  // State to hold the text input value
+  // State hook to manage the text input value
   const [text, setText] = useState("");
 
-  // Function to display an alert with the user input (`text` state's value)
+  // Function to trigger an alert showing the current text input value
   const alertMyText = () => {
-    Alert.alert("Alert", text || "No text entered");
+    Alert.alert("Alert", text || "No text entered"); // If text is empty, show 'No text entered'
   };
 
-  // A custom screen component that includes the UI elements
+  // A custom screen component that includes text input, a button, and a scrollable text block
   const CustomScreen = () => (
     <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"} // Adjust behavior for iOS/Android
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Offset adjustment for keyboard
+      style={styles.container} // Apply custom styles from StyleSheet
+      behavior={Platform.OS === "ios" ? "padding" : "height"} // Adjusts layout for the keyboard on iOS/Android
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Offset for proper display when keyboard is visible
     >
-      {/* Text input for user to type something */}
       <TextInput
-        style={styles.textInput}
-        value={text}
-        onChangeText={setText}
-        placeholder="Type something here."
-        placeholderTextColor="#757083" // Placeholder text color
+        style={styles.textInput} // Apply custom styles for the TextInput
+        value={text} // Controlled component: value is synced with `text` state
+        onChangeText={setText} // Update `text` state as user types
+        placeholder="Type something here." // Placeholder text
+        placeholderTextColor="#757083" // Color of the placeholder text
       />
-      {/* Display the text entered by the user */}
       <Text style={styles.textDisplay}>You wrote: {text}</Text>
-      {/* Button to trigger the alert with the user input */}
       <Button
-        onPress={alertMyText}
-        title="Press Me"
-        color="#757083" // Button color
+        onPress={alertMyText} // When pressed, call the alertMyText function
+        title="Press Me" // Button label
+        color="#757083" // Custom button color
       />
-      {/* Scrollable view to demonstrate scrolling with large content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.scrollText}>
           This text is so big! And so long! You have to scroll!
@@ -60,23 +57,19 @@ const App = () => {
   );
 
   return (
-    // Wrap the app with NavigationContainer for screen navigation
+    // Wrap the entire app in the navigation container to manage screen transitions
     <NavigationContainer>
-      {/* Navigator to manage the stack of screens */}
-      <Stack.Navigator initialRouteName="Start">
-        {/* Define the Start screen */}
+      <Stack.Navigator initialRouteName="Start">  
         <Stack.Screen
           name="Start"
           component={Start}
-          options={{ title: "Welcome to Start" }} // Screen title for Start
+          options={{ title: "Welcome to Start" }} // Screen title for the Start screen
         />
-        {/* Define the Chat screen */}
         <Stack.Screen
           name="Chat"
           component={Chat}
-          options={{ title: "Welcome to Chat" }} // Screen title for Chat
+          options={{ title: "Welcome to Chat" }} // Screen title for the Chat screen
         />
-        {/* Add the custom screen as another screen in the stack */}
         <Stack.Screen
           name="CustomScreen"
           component={CustomScreen}
@@ -90,35 +83,35 @@ const App = () => {
 // Styles for various components in the app
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    flex: 1, // Flexbox: container takes up the entire screen
+    justifyContent: "center", // Center content vertically
+    alignItems: "center", // Center content horizontally
   },
   textInput: {
-    width: "88%",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    height: 50,
-    padding: 10,
-    color: "#FFFFFF", // Text color inside input field
-    backgroundColor: "#757083", // Background color of input field
+    width: "88%", // TextInput width is 88% of the screen width
+    borderWidth: 1, // Border width for the input field
+    borderColor: "#ddd", // Light grey border color
+    borderRadius: 8, // Rounded corners for the input field
+    height: 50, // Height of the input field
+    padding: 10, // Padding inside the input field
+    color: "#FFFFFF", // Text color inside the input field
+    backgroundColor: "#757083", // Background color for the input field
   },
   textDisplay: {
-    height: 50,
-    lineHeight: 50,
-    color: "#FFFFFF", // Text color for displayed text
-    fontSize: 18, // Font size for displayed text
+    height: 50, // Fixed height for the displayed text
+    lineHeight: 50, // Ensure text is vertically centered
+    color: "#FFFFFF", // White text color
+    fontSize: 18, // Font size of the displayed text
   },
   scrollContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
+    alignItems: "center", // Center content horizontally within the ScrollView
+    justifyContent: "center", // Center content vertically within the ScrollView
+    padding: 20, // Padding around the content
   },
   scrollText: {
-    fontSize: 110,
-    color: "#FFFFFF", // Color of the scrollable text
+    fontSize: 110, // Large font size to create the scrolling effect
+    color: "#FFFFFF", // White text color for the scrollable text
   },
 });
 
-export default App;
+export default App; // Export the App component as the default export
