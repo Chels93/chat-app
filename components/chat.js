@@ -56,7 +56,7 @@ const Chat = ({ route, navigation }) => {
     >
       <View style={[styles.container, { backgroundColor: bgColor || "#fff" }]}>
         <GiftedChat
-          messages={messages}
+          messages={messages} // Feeding messages from the messages state
           onSend={(newMessages) => onSend(newMessages)}
           user={{
             _id: 1, // The current user's ID
