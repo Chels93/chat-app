@@ -11,7 +11,7 @@ const Chat = ({ route, navigation }) => {
       navigation.setOptions({ title: name });
     }
 
-    // Set initial message
+    // Set initial messages
     setMessages([
       {
         _id: 1,
@@ -21,6 +21,21 @@ const Chat = ({ route, navigation }) => {
           _id: 2,
           name: "Chatbot",
           avatar: "https://placeimg.com/140/140/any", // Random image as the chatbot's avatar
+        },
+      },
+      {
+        _id: 2,
+        text: "You’ve entered the chat.",
+        createdAt: new Date(),
+        system: true, // This message is a system message
+      },
+      {
+        _id: 3,
+        text: "Hey, it's great to be here!",
+        createdAt: new Date(),
+        user: {
+          _id: 1, // This message is from the current user
+          name: name || "User",
         },
       },
     ]);
