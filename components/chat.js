@@ -1,96 +1,120 @@
-import React, { useState, useEffect } from "react"; // Importing React and hooks
-import { StyleSheet, ImageBackground, KeyboardAvoidingView, Platform } from "react-native"; // Importing necessary components from react-native
-import { GiftedChat } from "react-native-gifted-chat"; // Importing the GiftedChat component for chat functionality
+// Chat.js
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Platform,
+  Alert,
+  KeyboardAvoidingView,
+} from "react-native";
+import {
+  GiftedChat,
+  InputToolbar,
+  Bubble,
+  Actions as CustomActions,
+  SystemMessage,
+} from "react-native-gifted-chat"; // Updated imports
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore"; // Firestore imports
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore"; // Firestore import
 
-// The Chat component receives route (for navigation params) and navigation (for screen options) as props
-const Chat = ({ route, navigation }) => {
-  // Destructuring params passed from the previous screen with default values if params are undefined
-  const { name = "User", bgColor = "#fff" } = route.params || {};
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDauyicK3B2tUFFsdaTY_Js8kPqK_RxvO8",
+  authDomain: "chatapp-15bbe.firebaseapp.com",
+  projectId: "chatapp-15bbe",
+  storageBucket: "chatapp-15bbe.appspot.com",
+  messagingSenderId: "681242972614",
+  appId: "1:681242972614:web:365b4780ee635c3c43a2c7",
+};
 
-  // State to hold the list of messages displayed in the chat
-  const [messages, setMessages] = useState([]);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app); // Initialize Firestore
 
-  // useEffect to handle side effects when the component is mounted
+const Chat = ({ route }) => {
+  const { userID, name = "User", bgColor = "#fff" } = route.params; // Destructure parameters
+
+  const [messages, setMessages] = useState([]); // State to hold messages
+
+  // Firestore query to fetch chat messages
   useEffect(() => {
-    // If the name param exists, set the screen title in the navigation bar to the user's name
-    if (name) {
-      navigation.setOptions({ title: name }); // Setting the title of the screen to the user's name
+    const q = query(collection(db, "messages"), orderBy("createdAt", "desc")); // Query Firestore to order messages by time
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map((doc) => ({
+        _id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate(), // Convert Firestore timestamp to Date object
+      }));
+
+      setMessages(fetchedMessages); // Set fetched messages in state
+    });
+
+    return () => unsubscribe(); // Unsubscribe from Firestore when component unmounts
+  }, []);
+
+  // Function to handle sending messages
+  const onSend = async (newMessages = []) => {
+    if (newMessages.length > 0) {
+      const { text } = newMessages[0];
+      if (text.trim()) {
+        const message = {
+          text,
+          createdAt: new Date(),
+          user: {
+            _id: userID,
+            name: name,
+          },
+        };
+        try {
+          await addDoc(collection(db, "messages"), message); // Add message to Firestore
+        } catch (error) {
+          console.error("Error sending message:", error);
+          Alert.alert("Message could not be sent.");
+        }
+      } else {
+        Alert.alert("Please enter a message."); // Alert if message is empty
+      }
     }
-
-    // Initialize the chat with a few example messages
-    setMessages([
-      {
-        _id: 1, // Unique ID for the message
-        text: "Hello! Welcome to the chat.", // Message content
-        createdAt: new Date(), // Timestamp when the message was created
-        user: {
-          _id: 2, // Unique ID for the chatbot user
-          name: "Chatbot", // Display name of the chatbot
-          avatar: "https://placeimg.com/140/140/any", // Avatar image for the chatbot
-        },
-      },
-      {
-        _id: 2,
-        text: "You’ve entered the chat.", // System message indicating the user has entered
-        createdAt: new Date(), // Timestamp when the system message was created
-        system: true, // Indicates this is a system message, not sent by a user
-      },
-      {
-        _id: 3,
-        text: `Hey ${name}, it's great to be here!`, // Message greeting the user by their name
-        createdAt: new Date(), // Timestamp when this message was created
-        user: {
-          _id: 1, // Unique ID for the current user (the one using the app)
-          name: name, // Name of the current user
-        },
-      },
-    ]);
-  }, [name, navigation]); // The effect runs whenever 'name' or 'navigation' changes
-
-  // Function that handles sending new messages
-  const onSend = (newMessages = []) => {
-    // Append the new messages to the existing messages array, updating the state
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, newMessages) // Using the GiftedChat method to append messages
-    );
   };
 
   return (
-    // Image background for the chat screen, loaded from the local assets
-    <ImageBackground
-      source={require("../assets/background-image.png")} // Background image path
-      style={styles.background} // Applying styles to the background image
-      resizeMode="cover" // Make the background image cover the entire screen
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // Adjust offset for Android
     >
-      {/* A wrapper to adjust the keyboard behavior for iOS/Android */}
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: bgColor }]} // Apply styles and set background color dynamically
-        behavior={Platform.OS === "ios" ? "padding" : "height"} // Adjust keyboard behavior based on the platform
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Offset to prevent the keyboard from covering input fields
-      >
-        {/* The GiftedChat component to handle chat UI and logic */}
+      <View style={[styles.container, { backgroundColor: bgColor }]}>
         <GiftedChat
-          messages={messages} // Messages to display in the chat window
-          onSend={(newMessages) => onSend(newMessages)} // Function to handle sending messages
+          messages={messages} // Pass messages to GiftedChat
+          onSend={newMessages => onSend(newMessages)}
           user={{
-            _id: 1, // ID of the current user, same as in the initial messages
-            name: name, // Display the user's name in the chat
+            _id: userID,
+            name: name,
           }}
+          renderBubble={(props) => (
+            <Bubble
+              {...props}
+              wrapperStyle={{
+                right: { backgroundColor: "#0084ff" }, // Customize bubble color
+              }}
+            />
+          )}
+          renderInputToolbar={(props) => <InputToolbar {...props} />}
+          renderActions={(props) => <CustomActions {...props} />} // Custom action buttons
+          renderSystemMessage={(props) => <SystemMessage {...props} />} // System message for notices
         />
-      </KeyboardAvoidingView>
-    </ImageBackground>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
-// StyleSheet for defining styles used in the component
+// Styles for the component
 const styles = StyleSheet.create({
-  background: {
-    flex: 1, // Ensure the background covers the full height and width of the screen
-    resizeMode: "cover", // The image should cover the entire screen without being stretched
-  },
   container: {
-    flex: 1, // Flexbox to make sure the container occupies the full screen
+    flex: 1,
+    padding: 10,
   },
 });
 
-export default Chat; // Export the Chat component as the default export
+export default Chat;

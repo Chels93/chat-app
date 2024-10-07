@@ -1,64 +1,122 @@
-import React, { useState } from "react"; // Importing React and the useState hook for managing component state
+// Start.js
+import React, { useState, useEffect } from "react";
 import {
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  ImageBackground, 
-  TouchableOpacity
-} from "react-native"; // Importing necessary UI components from React Native
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  ImageBackground,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getFirestore } from "firebase/firestore";
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDauyicK3B2tUFFsdaTY_Js8kPqK_RxvO8",
+  authDomain: "chatapp-15bbe.firebaseapp.com",
+  projectId: "chatapp-15bbe",
+  storageBucket: "chatapp-15bbe.appspot.com",
+  messagingSenderId: "681242972614",
+  appId: "1:681242972614:web:365b4780ee635c3c43a2c7"
+};
+
+// Initialize Firebase
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+
+// Initialize Firebase Auth
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
+
+// Initialize Firestore
+const db = getFirestore(app);
 
 // Define the Start functional component
 const Start = ({ navigation }) => {
-  // useState hook to manage the name input state (defaults to an empty string)
   const [name, setName] = useState("");
-  
-  // useState hook to manage the selected background color (default is white)
   const [bgColor, setBgColor] = useState("#fff");
 
-  // Array of color options that the user can choose from for background selection
   const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('userName');
+        const storedBgColor = await AsyncStorage.getItem('bgColor');
+
+        if (storedName) {
+          setName(storedName);
+        }
+        if (storedBgColor) {
+          setBgColor(storedBgColor);
+        }
+      } catch (error) {
+        console.error("Failed to load data from AsyncStorage", error);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const signInUser = async () => {
+    if (!name) {
+      Alert.alert("Please enter a username");
+      return;
+    }
+    try {
+      const result = await signInAnonymously(auth);
+      await AsyncStorage.setItem('userName', name);
+      await AsyncStorage.setItem('bgColor', bgColor);
+      navigation.navigate("Chat", { userID: result.user.uid, name, bgColor });
+      Alert.alert("Signed in Successfully!");
+    } catch (error) {
+      Alert.alert("Unable to sign in, try again later.");
+    }
+  };
+
   return (
-    // ImageBackground component to set a background image for the screen
     <ImageBackground
-      source={require("../assets/background-image.png")} // Path to the background image asset
-      style={styles.background} // Applying background image styles
+      source={require("../assets/background-image.png")}
+      style={styles.background}
     >
-      {/* Main container for all components on the screen */}
       <View style={styles.container}>
-        {/* Title of the screen */}
-        <Text style={styles.title}>Hello Screen1!</Text>
-        
-        {/* Text input for the user to enter their name */}
+        <Text style={styles.title}>Welcome!</Text>
+
         <TextInput
-          style={styles.textInput} // Style applied to the input field
-          value={name} // Binds the input value to the `name` state variable
-          onChangeText={setName} // Updates the `name` state when the text input changes
-          placeholder="Type your username here." // Placeholder text when input is empty
-          placeholderTextColor="#ddd" // Color of the placeholder text
+          style={styles.textInput}
+          value={name}
+          onChangeText={setName}
+          placeholder="Type your username here."
+          placeholderTextColor="#ddd"
         />
-        
-        {/* Subtitle for the color selection section */}
+
         <Text style={styles.subtitle}>Choose Background Color:</Text>
 
-        {/* Row of touchable circles representing the color options */}
         <View style={styles.colorOptions}>
           {colors.map((color) => (
             <TouchableOpacity
-              key={color} // Unique key for each color option
-              style={[styles.colorCircle, { backgroundColor: color }]} // Apply dynamic background color to each circle
-              onPress={() => setBgColor(color)} // Set selected color to bgColor state when pressed
+              key={color}
+              style={[styles.colorCircle, { backgroundColor: color }]}
+              onPress={() => setBgColor(color)}
             />
           ))}
         </View>
 
-        {/* Button to navigate to the Chat screen, passing the name and selected background color */}
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#757083" }]} // Button with background color
-          onPress={() => navigation.navigate("Chat", { name, bgColor })} // Navigates to Chat screen with params
+          style={[styles.button, { backgroundColor: "#757083" }]}
+          onPress={signInUser}
         >
-          {/* Text inside the button */}
           <Text style={styles.buttonText}>Start Chatting</Text>
         </TouchableOpacity>
       </View>
@@ -66,63 +124,62 @@ const Start = ({ navigation }) => {
   );
 };
 
-// Define the styles for the components
 const styles = StyleSheet.create({
   background: {
-    flex: 1, // Ensures the background image takes up the full screen height and width
-    resizeMode: "cover", // Cover the entire background without distortion
+    flex: 1,
+    resizeMode: "cover",
   },
   container: {
-    flex: 1, // Container takes up the full screen space
-    justifyContent: "center", // Center items vertically
-    alignItems: "center", // Center items horizontally
-    padding: 20, // Adds padding inside the container
-    backgroundColor: "rgba(0,0,0,0.5)", // Semi-transparent background overlay for text clarity
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   title: {
-    fontSize: 45, // Large font size for the title
-    fontWeight: "600", // Semi-bold font for emphasis
-    color: "#FFFFFF", // White color for text
-    marginBottom: 40, // Margin below the title to separate it from other components
+    fontSize: 45,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginBottom: 40,
   },
   subtitle: {
-    fontSize: 16, // Font size for the subtitle
-    fontWeight: "300", // Light font weight
-    color: "#FFFFFF", // White text color
-    marginBottom: 20, // Margin below the subtitle
+    fontSize: 16,
+    fontWeight: "300",
+    color: "#FFFFFF",
+    marginBottom: 20,
   },
   textInput: {
-    width: "88%", // Makes the input field take up 88% of the container width
-    padding: 15, // Padding inside the input field
-    borderWidth: 1, // 1-pixel border around the input field
-    borderColor: "#ddd", // Light gray border color
-    borderRadius: 8, // Rounded corners for the input field
-    marginVertical: 15, // Margin above and below the input field
-    color: "#FFFFFF", // White text color inside the input field
-    backgroundColor: "#757083", // Background color for the input field
+    width: "88%",
+    padding: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    marginVertical: 15,
+    color: "#FFFFFF",
+    backgroundColor: "#757083",
   },
   colorOptions: {
-    flexDirection: "row", // Arranges color circles in a row
-    marginVertical: 20, // Adds margin above and below the color options
+    flexDirection: "row",
+    marginVertical: 20,
   },
   colorCircle: {
-    width: 50, // Width of each color circle
-    height: 50, // Height of each color circle (same as width to form a square)
-    borderRadius: 25, // Rounds the corners to make the circle shape
-    marginHorizontal: 10, // Adds space between the color circles
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginHorizontal: 10,
   },
   button: {
-    width: "88%", // Button takes up 88% of the container width
-    padding: 15, // Padding inside the button
-    borderRadius: 8, // Rounded corners for the button
-    justifyContent: "center", // Center text vertically inside the button
-    alignItems: "center", // Center text horizontally inside the button
+    width: "88%",
+    padding: 15,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonText: {
-    color: "#FFFFFF", // White text color inside the button
-    fontSize: 16, // Font size for the button text
-    fontWeight: "600", // Semi-bold font weight for the button text
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
-export default Start; // Export the Start component as the default export
+export default Start;
