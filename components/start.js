@@ -109,6 +109,7 @@ const Start = ({ navigation }) => {
               key={color}
               style={[styles.colorCircle, { backgroundColor: color }]}
               onPress={() => setBgColor(color)}
+              activeOpacity={0.7}  // Ensure touch responsiveness
             />
           ))}
         </View>
@@ -116,6 +117,7 @@ const Start = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#757083" }]}
           onPress={signInUser}
+          activeOpacity={0.7}  // Ensure touch responsiveness
         >
           <Text style={styles.buttonText}>Start Chatting</Text>
         </TouchableOpacity>
