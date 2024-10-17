@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
@@ -6,12 +6,23 @@ import { useActionSheet } from "@expo/react-native-action-sheet";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // Component to provide media and location actions in the chat
-const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
+const CustomActions = ({
+  wrapperStyle,
+  iconTextStyle,
+  onSend,
+  storage,
+  userID
+}) => {
   const actionSheet = useActionSheet();
 
   // Handle action sheet options
   const onActionPress = () => {
-    const options = ['Choose From Library', 'Take Picture', 'Send Location', 'Cancel'];
+    const options = [
+      "Choose From Library",
+      "Take Picture",
+      "Send Location",
+      "Cancel",
+    ];
     const cancelButtonIndex = options.length - 1;
     actionSheet.showActionSheetWithOptions(
       { options, cancelButtonIndex },
@@ -29,14 +40,15 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
           default:
             return; // If "Cancel" is selected, do nothing
         }
-      },
+      }
     );
   };
 
   // Pick image from media library
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Permission to access media library denied.");
         return;
@@ -83,13 +95,10 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
             latitude: location.coords.latitude,
           },
         });
-      } else {
-        Alert.alert("Error occurred while fetching location");
-      }
-    } else {
-      Alert.alert("Permissions haven't been granted.");
-    }
+      } else Alert.alert("Error occurred while fetching location");
+    } else Alert.alert("Permissions haven't been granted.");
   }
+  
 
   // Generate a unique reference string for the image
   const generateReference = (uri) => {
@@ -97,7 +106,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     const imageName = uri.split("/").pop(); // Simplified to get the last part of the URI
     const timeStamp = Date.now();
     return `${userID}-${timeStamp}-${imageName}`;
-  }
+  };
 
   // Upload image to Firebase storage and send the image URL
   const uploadAndSendImage = async (imageURI) => {
@@ -105,30 +114,29 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     const newUploadRef = ref(storage, uniqueRefString);
     const response = await fetch(imageURI);
     const blob = await response.blob();
-    
-    try {
-        const snapshot = await uploadBytes(newUploadRef, blob);
-        const imageURL = await getDownloadURL(snapshot.ref);
-        
-        console.log("Image uploaded successfully:", imageURL); // Log the image URL
-        
-        if (imageURL) {
-            onSend([{ image: imageURL }]); // Send the image URL in an array
-        } else {
-            console.error("Image URL is undefined");
-        }
-    } catch (error) {
-        console.error("Error uploading image: ", error);
-        Alert.alert("An error occurred while uploading the image.");
-    }
-};
 
+    try {
+      const snapshot = await uploadBytes(newUploadRef, blob);
+      const imageURL = await getDownloadURL(snapshot.ref);
+
+      console.log("Image uploaded successfully:", imageURL); // Log the image URL
+
+      if (imageURL) {
+        onSend([{ image: imageURL }]); // Send the image URL in an array
+      } else {
+        console.error("Image URL is undefined");
+      }
+    } catch (error) {
+      console.error("Error uploading image: ", error);
+      Alert.alert("An error occurred while uploading the image.");
+    }
+  };
 
   return (
-    <TouchableOpacity 
-      style={styles.container} 
-      onPress={onActionPress} 
-      accessibilityLabel="Action Menu" 
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onActionPress}
+      accessibilityLabel="Action Menu"
       accessibilityRole="button"
     >
       <View style={[styles.wrapper, wrapperStyle]}>
@@ -139,25 +147,25 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
 };
 
 const styles = StyleSheet.create({
-    container: {
-      width: 26,
-      height: 26,
-      marginLeft: 10,
-      marginBottom: 10,
-    },
-    wrapper: {
-      borderRadius: 13,
-      borderColor: '#b2b2b2',
-      borderWidth: 2,
-      flex: 1,
-    },
-    iconText: {
-      color: '#b2b2b2',
-      fontWeight: 'bold',
-      fontSize: 16,
-      backgroundColor: 'transparent',
-      textAlign: 'center',
-    },
-  });
+  container: {
+    width: 26,
+    height: 26,
+    marginLeft: 10,
+    marginBottom: 10,
+  },
+  wrapper: {
+    borderRadius: 13,
+    borderColor: "#b2b2b2",
+    borderWidth: 2,
+    flex: 1,
+  },
+  iconText: {
+    color: "#b2b2b2",
+    fontWeight: "bold",
+    fontSize: 16,
+    backgroundColor: "transparent",
+    textAlign: "center",
+  },
+});
 
 export default CustomActions; // Export the CustomActions component

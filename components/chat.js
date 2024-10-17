@@ -1,5 +1,5 @@
 // Import necessary libraries and components
-import React, { useEffect, useState, useRef } from "react"; // React and hooks for state and effects
+import React, { useEffect, useState } from "react"; // React and hooks for state and effects
 import {
   StyleSheet,
   View,
@@ -83,38 +83,10 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
     }
   };
 
+  // Function to send new messages
   const onSend = (newMessages) => {
-    console.log("New messages to send:", newMessages); // Log the new messages
-    
-    newMessages.forEach(message => {
-        // Ensure the message object has the correct structure
-        const messageData = {
-            _id: message._id || Date.now().toString(),
-            text: message.text || '', // Default to empty string if text is undefined
-            createdAt: new Date(),
-            user: {
-                _id: userID,
-                name: name,
-                color: color || 'defaultColor', // Ensure color is defined
-            },
-            image: message.image || null, // Handle image property
-        };
-
-        // Ensure the messageData object is valid before sending
-        if (messageData.text || messageData.image) {
-            addDoc(collection(db, "messages"), messageData)
-                .then(() => {
-                    console.log("Message sent successfully");
-                })
-                .catch((error) => {
-                    console.error("Error sending message:", error);
-                });
-        } else {
-            console.error("Message data is invalid:", messageData);
-        }
-    });
-};
-
+    addDoc(collection(db, "messages"), newMessages[0])
+  };
 
   const renderInputToolbar = (props) => {
     if (isConnected === true) return <InputToolbar {...props} />;
@@ -150,7 +122,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
   };
 
   const renderCustomActions = (props) => {
-    return <CustomActions userID={userID} storage={storage} {...props} />;
+    return <CustomActions userID={userID} storage={storage} {...props} getLocation={getLocation} />;
   };
 
   const renderCustomView = (props) => {
@@ -162,7 +134,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
             width: 150,
             height: 100,
             borderRadius: 13,
-            margin: 3
+            margin: 3,
           }}
           region={{
             latitude: currentMessage.location.latitude,
@@ -174,7 +146,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
       );
     }
     return null;
-  }
+  };
 
   // KeyboardAvoidingView to manage keyboard behavior
   return (
@@ -186,14 +158,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
         <GiftedChat
           messages={messages}
           onSend={(newMessages) => onSend(newMessages)}
-          renderActions={(props) => (
-            <CustomActions
-              {...props}
-              onSend={onSend}
-              userID={userID}
-              storage={storage}
-            />
-          )}
+          renderActions={renderCustomActions}
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           user={{
@@ -214,3 +179,4 @@ const styles = StyleSheet.create({
 });
 
 export default Chat; // Export the Chat component
+
