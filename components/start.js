@@ -7,83 +7,43 @@ import {
   TextInput,
   ImageBackground,
   TouchableOpacity,
+  Button,
   Alert,
 } from "react-native";
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { initializeApp } from "firebase/app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getFirestore } from "firebase/firestore";
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore } from "firebase/firestore"; 
+import { getStorage } from "firebase/storage"; 
+import { initializeAuth, getAuth, signInAnonymously } from "firebase/auth"; 
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDauyicK3B2tUFFsdaTY_Js8kPqK_RxvO8",
-  authDomain: "chatapp-15bbe.firebaseapp.com",
-  projectId: "chatapp-15bbe",
-  storageBucket: "chatapp-15bbe.appspot.com",
-  messagingSenderId: "681242972614",
-  appId: "1:681242972614:web:365b4780ee635c3c43a2c7"
-};
-
-// Initialize Firebase
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
-}
-
-// Initialize Firebase Auth
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
-
-// Initialize Firestore
-const db = getFirestore(app);
-
-// Define the Start functional component
+// Define the Start component, which receives navigation as a prop
 const Start = ({ navigation }) => {
+  // State to hold the user's name and selected background color
   const [name, setName] = useState("");
+  const auth = getAuth();
   const [bgColor, setBgColor] = useState("#fff");
-
   const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const storedName = await AsyncStorage.getItem('userName');
-        const storedBgColor = await AsyncStorage.getItem('bgColor');
-
-        if (storedName) {
-          setName(storedName);
-        }
-        if (storedBgColor) {
-          setBgColor(storedBgColor);
-        }
-      } catch (error) {
-        console.error("Failed to load data from AsyncStorage", error);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const signInUser = async () => {
-    if (!name) {
-      Alert.alert("Please enter a username");
-      return;
-    }
+  // Utility function to store user data in AsyncStorage
+  const storeUserData = async (key, value) => {
     try {
-      const result = await signInAnonymously(auth);
-      await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('bgColor', bgColor);
-      navigation.navigate("Chat", { userID: result.user.uid, name, bgColor });
-      Alert.alert("Signed in Successfully!");
+      await AsyncStorage.setItem(key, value);
     } catch (error) {
-      Alert.alert("Unable to sign in, try again later.");
+      console.error("Failed to save data", error);
     }
   };
+
+  // Function to log in the user anonymously and navigate to the Chat screen
+  const loginUser = () => {
+    signInAnonymously(auth)
+      .then((result) => {
+        navigation.navigate("Chat", { userID: result.user.uid, name })
+        Alert.alert("Successfully Signed In")
+      })
+      .catch((error) => {
+        Alert.alert("Unable to Login, try later again.");
+      })
+  }
 
   return (
     <ImageBackground
@@ -92,7 +52,6 @@ const Start = ({ navigation }) => {
     >
       <View style={styles.container}>
         <Text style={styles.title}>Welcome!</Text>
-
         <TextInput
           style={styles.textInput}
           value={name}
@@ -100,24 +59,19 @@ const Start = ({ navigation }) => {
           placeholder="Type your username here."
           placeholderTextColor="#ddd"
         />
-
         <Text style={styles.subtitle}>Choose Background Color:</Text>
-
         <View style={styles.colorOptions}>
           {colors.map((color) => (
             <TouchableOpacity
               key={color}
               style={[styles.colorCircle, { backgroundColor: color }]}
               onPress={() => setBgColor(color)}
-              activeOpacity={0.7}  // Ensure touch responsiveness
             />
           ))}
         </View>
-
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#757083" }]}
-          onPress={signInUser}
-          activeOpacity={0.7}  // Ensure touch responsiveness
+          onPress={loginUser}
         >
           <Text style={styles.buttonText}>Start Chatting</Text>
         </TouchableOpacity>
@@ -126,6 +80,7 @@ const Start = ({ navigation }) => {
   );
 };
 
+// Styles for the component
 const styles = StyleSheet.create({
   background: {
     flex: 1,
@@ -184,4 +139,5 @@ const styles = StyleSheet.create({
   },
 });
 
+// Export the Start component
 export default Start;
