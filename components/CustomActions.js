@@ -139,30 +139,25 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: 50, // Increased for better touchability
-    height: 50,
-    marginLeft: 10,
-    marginBottom: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wrapper: {
-    borderRadius: 25, // Circular border for the action button
-    borderColor: "#b2b2b2",
-    borderWidth: 2,
-    backgroundColor: "#ffffff", // Added background color for visibility
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconText: {
-    color: "#b2b2b2",
-    fontWeight: "bold",
-    fontSize: 28, // Increased font size for better visibility
-    backgroundColor: "transparent",
-    textAlign: "center",
-  },
-});
+    container: {
+      width: 26,
+      height: 26,
+      marginLeft: 10,
+      marginBottom: 10,
+    },
+    wrapper: {
+      borderRadius: 13,
+      borderColor: '#b2b2b2',
+      borderWidth: 2,
+      flex: 1,
+    },
+    iconText: {
+      color: '#b2b2b2',
+      fontWeight: 'bold',
+      fontSize: 16,
+      backgroundColor: 'transparent',
+      textAlign: 'center',
+    },
+  });
 
 export default CustomActions; // Export the CustomActions component

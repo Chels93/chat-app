@@ -37,7 +37,7 @@ const Start = ({ navigation }) => {
   const loginUser = () => {
     signInAnonymously(auth)
       .then((result) => {
-        navigation.navigate("Chat", { userID: result.user.uid, name })
+        navigation.navigate("Chat", { userID: result.user.uid, name, color: bgColor })
         Alert.alert("Successfully Signed In")
       })
       .catch((error) => {

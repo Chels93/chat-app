@@ -182,7 +182,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: color || "#fff" }]}>
         <GiftedChat
           messages={messages}
           onSend={(newMessages) => onSend(newMessages)}
