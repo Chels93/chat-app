@@ -85,7 +85,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
 
   // Function to send new messages
   const onSend = (newMessages) => {
-    addDoc(collection(db, "messages"), newMessages[0])
+    addDoc(collection(db, "messages"), newMessages[0]);
   };
 
   const renderInputToolbar = (props) => {
@@ -122,7 +122,7 @@ const Chat = ({ db, route, navigation, isConnected, storage }) => {
   };
 
   const renderCustomActions = (props) => {
-    return <CustomActions userID={userID} storage={storage} {...props} getLocation={getLocation} />;
+    return <CustomActions userID={userID} storage={storage} onSend={onSend} {...props} />;
   };
 
   const renderCustomView = (props) => {
@@ -179,4 +179,3 @@ const styles = StyleSheet.create({
 });
 
 export default Chat; // Export the Chat component
-

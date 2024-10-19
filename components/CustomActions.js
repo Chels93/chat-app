@@ -11,7 +11,7 @@ const CustomActions = ({
   iconTextStyle,
   onSend,
   storage,
-  userID
+  userID,
 }) => {
   const actionSheet = useActionSheet();
 
@@ -29,16 +29,16 @@ const CustomActions = ({
       async (buttonIndex) => {
         switch (buttonIndex) {
           case 0:
-            await pickImage(); // User chose to pick an image from the library
+            await pickImage();
             break;
           case 1:
-            await takePhoto(); // User chose to take a picture using the camera
+            await takePhoto();
             break;
           case 2:
-            await getLocation(); // User chose to send their current location
+            await getLocation();
             break;
           default:
-            return; // If "Cancel" is selected, do nothing
+            return;
         }
       }
     );
@@ -47,8 +47,7 @@ const CustomActions = ({
   // Pick image from media library
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Permission to access media library denied.");
         return;
@@ -57,7 +56,7 @@ const CustomActions = ({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
       });
       if (!result.canceled && result.assets.length > 0) {
-        await uploadAndSendImage(result.assets[0].uri); // Use the URI of the picked image
+        await uploadAndSendImage(result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error picking image: ", error);
@@ -75,7 +74,7 @@ const CustomActions = ({
       }
       const result = await ImagePicker.launchCameraAsync();
       if (!result.canceled && result.assets.length > 0) {
-        await uploadAndSendImage(result.assets[0].uri); // Use the URI of the captured image
+        await uploadAndSendImage(result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error taking photo: ", error);
@@ -95,15 +94,17 @@ const CustomActions = ({
             latitude: location.coords.latitude,
           },
         });
-      } else Alert.alert("Error occurred while fetching location");
-    } else Alert.alert("Permissions haven't been granted.");
-  }
-  
+      } else {
+        Alert.alert("Error occurred while fetching location");
+      }
+    } else {
+      Alert.alert("Permissions haven't been granted.");
+    }
+  };
 
   // Generate a unique reference string for the image
   const generateReference = (uri) => {
-    // This will get the file name from the URI
-    const imageName = uri.split("/").pop(); // Simplified to get the last part of the URI
+    const imageName = uri.split("/").pop();
     const timeStamp = Date.now();
     return `${userID}-${timeStamp}-${imageName}`;
   };
@@ -119,10 +120,10 @@ const CustomActions = ({
       const snapshot = await uploadBytes(newUploadRef, blob);
       const imageURL = await getDownloadURL(snapshot.ref);
 
-      console.log("Image uploaded successfully:", imageURL); // Log the image URL
+      console.log("Image uploaded successfully:", imageURL);
 
       if (imageURL) {
-        onSend([{ image: imageURL }]); // Send the image URL in an array
+        onSend([{ image: imageURL }]);
       } else {
         console.error("Image URL is undefined");
       }
@@ -168,4 +169,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomActions; // Export the CustomActions component
+export default CustomActions;
