@@ -1,3 +1,4 @@
+// Import necessary libraries
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -8,6 +9,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 // Component to provide media and location actions in the chat
 const CustomActions = ({
   wrapperStyle,
+  name,
   iconTextStyle,
   onSend,
   storage,
@@ -24,21 +26,26 @@ const CustomActions = ({
       "Cancel",
     ];
     const cancelButtonIndex = options.length - 1;
+
     actionSheet.showActionSheetWithOptions(
       { options, cancelButtonIndex },
       async (buttonIndex) => {
-        switch (buttonIndex) {
-          case 0:
-            await pickImage();
-            break;
-          case 1:
-            await takePhoto();
-            break;
-          case 2:
-            await getLocation();
-            break;
-          default:
-            return;
+        try {
+          switch (buttonIndex) {
+            case 0:
+              await pickImage();
+              break;
+            case 1:
+              await takePhoto();
+              break;
+            case 2:
+              await getLocation();
+              break;
+            default:
+              return;
+          }
+        } catch (error) {
+          Alert.alert("An unexpected error occurred.", error.message);
         }
       }
     );
@@ -52,9 +59,11 @@ const CustomActions = ({
         Alert.alert("Permission to access media library denied.");
         return;
       }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
       });
+
       if (!result.canceled && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
       }
@@ -72,6 +81,7 @@ const CustomActions = ({
         Alert.alert("Camera permission denied.");
         return;
       }
+
       const result = await ImagePicker.launchCameraAsync();
       if (!result.canceled && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
@@ -84,49 +94,46 @@ const CustomActions = ({
 
   // Get the user's current location
   const getLocation = async () => {
-    let permissions = await Location.requestForegroundPermissionsAsync();
-    if (permissions?.granted) {
-      const location = await Location.getCurrentPositionAsync({});
-      if (location) {
-        onSend({
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
-          },
-        });
-      } else {
-        Alert.alert("Error occurred while fetching location");
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Location permission denied.");
+        return;
       }
-    } else {
-      Alert.alert("Permissions haven't been granted.");
+
+      const location = await Location.getCurrentPositionAsync({});
+      const message = {
+        location: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+      };
+      onSend([message]);
+    } catch (error) {
+      console.error("Error getting location: ", error);
+      Alert.alert("An error occurred while retrieving the location.");
     }
   };
 
-  // Generate a unique reference string for the image
-  const generateReference = (uri) => {
-    const imageName = uri.split("/").pop();
-    const timeStamp = Date.now();
-    return `${userID}-${timeStamp}-${imageName}`;
-  };
-
-  // Upload image to Firebase storage and send the image URL
-  const uploadAndSendImage = async (imageURI) => {
-    const uniqueRefString = generateReference(imageURI);
-    const newUploadRef = ref(storage, uniqueRefString);
-    const response = await fetch(imageURI);
-    const blob = await response.blob();
-
+  // Upload image and send the message
+  const uploadAndSendImage = async (uri) => {
     try {
-      const snapshot = await uploadBytes(newUploadRef, blob);
-      const imageURL = await getDownloadURL(snapshot.ref);
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const filename = uri.substring(uri.lastIndexOf("/") + 1);
+      const storageRef = ref(storage, `images/${filename}`);
+      
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
 
-      console.log("Image uploaded successfully:", imageURL);
-
-      if (imageURL) {
-        onSend([{ image: imageURL }]);
-      } else {
-        console.error("Image URL is undefined");
-      }
+      const message = {
+        text: downloadURL,
+        user: {
+          _id: userID,
+          name,
+        },
+      };
+      onSend([message]);
     } catch (error) {
       console.error("Error uploading image: ", error);
       Alert.alert("An error occurred while uploading the image.");
@@ -135,37 +142,27 @@ const CustomActions = ({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      accessible={true}
+      accessibilityLabel="More options"
+      accessibilityHint="Send a photo or your location"
+      style={[styles.wrapper, wrapperStyle]}
       onPress={onActionPress}
-      accessibilityLabel="Action Menu"
-      accessibilityRole="button"
     >
-      <View style={[styles.wrapper, wrapperStyle]}>
+      <View>
         <Text style={[styles.iconText, iconTextStyle]}>+</Text>
       </View>
     </TouchableOpacity>
   );
 };
 
+// Styles for the CustomActions component
 const styles = StyleSheet.create({
-  container: {
-    width: 26,
-    height: 26,
-    marginLeft: 10,
-    marginBottom: 10,
-  },
   wrapper: {
-    borderRadius: 13,
-    borderColor: "#b2b2b2",
-    borderWidth: 2,
-    flex: 1,
+    // Custom styles for the wrapper
   },
   iconText: {
-    color: "#b2b2b2",
-    fontWeight: "bold",
-    fontSize: 16,
-    backgroundColor: "transparent",
-    textAlign: "center",
+    fontSize: 22,
+    color: "#fff",
   },
 });
 
