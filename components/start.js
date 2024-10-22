@@ -1,5 +1,5 @@
 // Start.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,14 +7,12 @@ import {
   TextInput,
   ImageBackground,
   TouchableOpacity,
-  Button,
   Alert,
+  Platform, // Import Platform here
+  KeyboardAvoidingView, // Import KeyboardAvoidingView for proper functionality
 } from "react-native";
-import { initializeApp } from "firebase/app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getFirestore } from "firebase/firestore"; 
-import { getStorage } from "firebase/storage"; 
-import { initializeAuth, getAuth, signInAnonymously } from "firebase/auth"; 
+import { getAuth, signInAnonymously } from "firebase/auth";
 
 // Define the Start component, which receives navigation as a prop
 const Start = ({ navigation }) => {
@@ -24,26 +22,21 @@ const Start = ({ navigation }) => {
   const [bgColor, setBgColor] = useState("#fff");
   const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
 
-  // Utility function to store user data in AsyncStorage
-  const storeUserData = async (key, value) => {
-    try {
-      await AsyncStorage.setItem(key, value);
-    } catch (error) {
-      console.error("Failed to save data", error);
-    }
-  };
-
   // Function to log in the user anonymously and navigate to the Chat screen
   const loginUser = () => {
     signInAnonymously(auth)
       .then((result) => {
-        navigation.navigate("Chat", { userID: result.user.uid, name, color: bgColor })
-        Alert.alert("Successfully Signed In")
+        navigation.navigate("Chat", {
+          userID: result.user.uid,
+          name,
+          color: bgColor,
+        });
+        Alert.alert("Successfully Signed In");
       })
       .catch((error) => {
         Alert.alert("Unable to Login, try later again.");
-      })
-  }
+      });
+  };
 
   return (
     <ImageBackground
@@ -76,6 +69,12 @@ const Start = ({ navigation }) => {
           <Text style={styles.buttonText}>Start Chatting</Text>
         </TouchableOpacity>
       </View>
+      {Platform.OS === "android" ? (
+        <KeyboardAvoidingView behavior="height" />
+      ) : null}
+      {Platform.OS === "ios" ? (
+        <KeyboardAvoidingView behavior="padding" />
+      ) : null}
     </ImageBackground>
   );
 };

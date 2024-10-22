@@ -5,11 +5,12 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Timestamp } from "firebase/firestore"; // Import Timestamp
+import MapView from "react-native-maps"; // Import MapView for location rendering
 
 // Component to provide media and location actions in the chat
 const CustomActions = ({
   wrapperStyle,
-  name,
   iconTextStyle,
   onSend,
   storage,
@@ -51,118 +52,161 @@ const CustomActions = ({
     );
   };
 
+  // Generate a unique reference for each media file
+  const generateReference = (uri) => {
+    const timeStamp = new Date().getTime();
+    const imageName = uri.split("/").pop();
+    return `${userID}-${timeStamp}-${imageName}`;
+  };
+
   // Pick image from media library
   const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission to access media library denied.");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      });
-
-      if (!result.canceled && result.assets.length > 0) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status === "granted") {
+      const result = await ImagePicker.launchImageLibraryAsync();
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
+      } else {
+        Alert.alert("Image selection was canceled.");
       }
-    } catch (error) {
-      console.error("Error picking image: ", error);
-      Alert.alert("An error occurred while picking the image.");
+    } else {
+      Alert.alert("Permissions haven't been granted.");
     }
   };
 
   // Take a photo using the camera
   const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Camera permission denied.");
-        return;
-      }
-
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status === "granted") {
       const result = await ImagePicker.launchCameraAsync();
-      if (!result.canceled && result.assets.length > 0) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
+      } else {
+        Alert.alert("Camera usage was canceled.");
       }
-    } catch (error) {
-      console.error("Error taking photo: ", error);
-      Alert.alert("An error occurred while taking the photo.");
+    } else {
+      Alert.alert(
+        "Permissions haven't been granted. Please enable them in settings."
+      );
     }
   };
 
   // Get the user's current location
   const getLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Location permission denied.");
-        return;
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === "granted") {
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        if (location) {
+          onSend([
+            {
+              createdAt: Timestamp.now(),
+              user: { _id: userID },
+              location: {
+                longitude: location.coords.longitude,
+                latitude: location.coords.latitude,
+              },
+            },
+          ]);
+        } else {
+          Alert.alert("Error occurred while fetching location.");
+        }
+      } catch (error) {
+        Alert.alert("Unable to retrieve location. Please check your settings.");
       }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const message = {
-        location: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-      };
-      onSend([message]);
-    } catch (error) {
-      console.error("Error getting location: ", error);
-      Alert.alert("An error occurred while retrieving the location.");
+    } else {
+      Alert.alert("Location permissions haven't been granted.");
     }
   };
 
   // Upload image and send the message
-  const uploadAndSendImage = async (uri) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const filename = uri.substring(uri.lastIndexOf("/") + 1);
-      const storageRef = ref(storage, `images/${filename}`);
-      
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
+  const uploadAndSendImage = async (imageURI) => {
+    if (!imageURI) {
+      Alert.alert("Image URI is undefined.");
+      return;
+    }
 
-      const message = {
-        text: downloadURL,
-        user: {
-          _id: userID,
-          name,
+    const uniqueRefString = generateReference(imageURI);
+    const newUploadRef = ref(storage, uniqueRefString);
+
+    try {
+      const response = await fetch(imageURI);
+      const blob = await response.blob();
+      const snapshot = await uploadBytes(newUploadRef, blob);
+      const imageURL = await getDownloadURL(snapshot.ref);
+      onSend([
+        {
+          createdAt: Timestamp.now(),
+          user: { _id: userID },
+          image: imageURL,
         },
-      };
-      onSend([message]);
+      ]);
     } catch (error) {
-      console.error("Error uploading image: ", error);
-      Alert.alert("An error occurred while uploading the image.");
+      Alert.alert("Failed to upload image.", error.message);
     }
   };
 
   return (
     <TouchableOpacity
       accessible={true}
-      accessibilityLabel="More options"
-      accessibilityHint="Send a photo or your location"
-      style={[styles.wrapper, wrapperStyle]}
+      accessibilityLabel="Select optional actions"
+      accessibilityHint="Choose to send an image or your location."
+      accessibilityRole="button"
+      style={styles.container}
       onPress={onActionPress}
     >
-      <View>
+      <View style={[styles.wrapper, wrapperStyle]}>
         <Text style={[styles.iconText, iconTextStyle]}>+</Text>
       </View>
     </TouchableOpacity>
   );
 };
 
-// Styles for the CustomActions component
+// Custom render function for showing the MapView when a location is sent
+export const renderCustomView = (props) => {
+  const { currentMessage } = props;
+
+  if (currentMessage.location) {
+    return (
+      <MapView
+        style={styles.mapView}
+        initialRegion={{
+          latitude: currentMessage.location.latitude,
+          longitude: currentMessage.location.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      />
+    );
+  }
+  return null;
+};
+
 const styles = StyleSheet.create({
+  container: {
+    width: 26,
+    height: 26,
+    marginLeft: 10,
+    marginBottom: 10,
+  },
   wrapper: {
-    // Custom styles for the wrapper
+    borderRadius: 13,
+    borderColor: "#b2b2b2",
+    borderWidth: 2,
+    flex: 1,
   },
   iconText: {
-    fontSize: 22,
-    color: "#fff",
+    color: "#b2b2b2",
+    fontWeight: "bold",
+    fontSize: 16,
+    backgroundColor: "transparent",
+    textAlign: "center",
+  },
+  mapView: {
+    width: 150,
+    height: 100,
+    borderRadius: 13,
+    margin: 3,
   },
 });
 

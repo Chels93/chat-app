@@ -13,18 +13,30 @@
       },
       "ios": {
         "supportsTablet": true,
-        "hermes": false 
+        "hermes": false,
+        "infoPlist": {
+          "NSLocationWhenInUseUsageDescription": "This app requires access to your location to share it with others.",
+          "NSCameraUsageDescription": "This app needs access to your camera to take and send photos.",
+          "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to share photos."
+        }
       },
       "android": {
         "adaptiveIcon": {
           "foregroundImage": "./assets/adaptive-icon.png",
           "backgroundColor": "#ffffff"
         },
-        "hermes": false 
+        "hermes": false,
+        "permissions": [
+          "ACCESS_FINE_LOCATION",
+          "ACCESS_COARSE_LOCATION",
+          "CAMERA",
+          "READ_EXTERNAL_STORAGE",
+          "WRITE_EXTERNAL_STORAGE"
+        ]
       },
       "web": {
         "favicon": "./assets/favicon.png"
       }
     }
-  }  
+  }
   
