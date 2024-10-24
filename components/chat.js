@@ -1,4 +1,3 @@
-// Import necessary libraries and components
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -20,35 +19,51 @@ import MapView from "react-native-maps";
 import CustomActions from "./CustomActions";
 import { getStorage } from "firebase/storage"; // Import Firebase Storage
 
+// Chat Component
 const Chat = ({ db, route, navigation, isConnected }) => {
+  // State to hold chat messages
   const [messages, setMessages] = useState([]);
-  const { name, userID, color, backgroundColor } = route.params;
 
-  // Initialize Firebase storage
-  const storage = getStorage(); 
+  // Destructure paramters passed via route from Start Screen
+  const { name, userID, color } = route.params;
 
+  // Initialize Firebase storage for media upload
+  const storage = getStorage();
+
+  // Handle navigation options and data syncing (online/offline)
   useEffect(() => {
+    // Set navigation title to user's name
     navigation.setOptions({ title: name });
-    let unsubMessages;
 
+    let unsubMessages; // Unsubscribe function for Firestore snapshot listener
+
+    // Check if the user is online
     if (isConnected) {
+      // Query Firestore for messages, ordered by creation data (descending)
       const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+
+      // Listen for real-time updates to messages collection
       unsubMessages = onSnapshot(q, (snapshot) => {
+        // Map Firestore documents to message objects and update the state
         const newMessages = snapshot.docs.map((doc) => ({
           _id: doc.id,
           ...doc.data(),
           createdAt: new Date(doc.data().createdAt.toMillis()),
         }));
+        // Cache the messages locally for offline use
         cacheMessages(newMessages);
         setMessages(newMessages);
       });
     } else {
+      // Load cached messages if the user is offline
       loadCachedMessages();
     }
 
+    // Cleanup function to unsubscribe from the snapshot listener when the component unmounts
     return () => unsubMessages && unsubMessages();
   }, [isConnected, db, navigation, name]);
 
+  // Function to load cached messages from AsyncStorage when offline
   const loadCachedMessages = async () => {
     try {
       const cachedMessages = await AsyncStorage.getItem("chat_messages");
@@ -58,6 +73,7 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     }
   };
 
+  // Function to cache messages in AsyncStorage for offline access
   const cacheMessages = async (messagesToCache) => {
     try {
       await AsyncStorage.setItem(
@@ -69,19 +85,24 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     }
   };
 
+  // Function to handle sending messages and storing them in Firestore
   const onSend = async (newMessages) => {
     try {
+      // Add the first message from newMessages array to Firestore
       await addDoc(collection(db, "messages"), newMessages[0]);
     } catch (error) {
+      // Show an alert and log the error if message sending fails
       Alert.alert("Error sending message", error.message);
       console.error("Error sending message:", error);
     }
   };
 
+  // Function to conditionally render the input toolbar (only when offline)
   const renderInputToolbar = (props) => {
     return isConnected ? <InputToolbar {...props} /> : null;
   };
 
+  // Customizing the appearance of the chat bubbles (sender and receiver)
   const renderBubble = (props) => (
     <Bubble
       {...props}
@@ -102,6 +123,7 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     />
   );
 
+  // Custom rendering for showing a map when location data is sent in a message
   const renderCustomView = (props) => {
     const { currentMessage } = props;
     if (currentMessage?.location) {
@@ -121,6 +143,7 @@ const Chat = ({ db, route, navigation, isConnected }) => {
     return null;
   };
 
+  // Main return block to render Chat interface
   return (
     <View style={[styles.chatContainer, { backgroundColor: color }]}>
       <GiftedChat
@@ -132,14 +155,17 @@ const Chat = ({ db, route, navigation, isConnected }) => {
         renderCustomView={renderCustomView}
         renderActions={renderCustomActions} // Use the custom actions for media and location sharing
       />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      />
     </View>
   );
 };
 
+// Styles for Chat screen container
 const styles = StyleSheet.create({
   chatContainer: {
-    flex: 1,
+    flex: 1, // Ensures the chat container takes up the full screen
   },
 });
 

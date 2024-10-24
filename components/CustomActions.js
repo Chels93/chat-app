@@ -1,12 +1,11 @@
-// Import necessary libraries
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { Timestamp } from "firebase/firestore"; // Import Timestamp
-import MapView from "react-native-maps"; // Import MapView for location rendering
+import { Timestamp } from "firebase/firestore";
+import MapView from "react-native-maps";
 
 // Component to provide media and location actions in the chat
 const CustomActions = ({
@@ -18,7 +17,7 @@ const CustomActions = ({
 }) => {
   const actionSheet = useActionSheet();
 
-  // Handle action sheet options
+  // Handle action sheet options when "+" button is pressed
   const onActionPress = () => {
     const options = [
       "Choose From Library",
@@ -53,10 +52,11 @@ const CustomActions = ({
   };
 
   // Generate a unique reference for each media file
+  // URI will be used to name the file, appending userID and timestamp for uniqueness
   const generateReference = (uri) => {
     const timeStamp = new Date().getTime();
-    const imageName = uri.split("/").pop();
-    return `${userID}-${timeStamp}-${imageName}`;
+    const imageName = uri.split("/").pop(); // Extract the image name from URI
+    return `${userID}-${timeStamp}-${imageName}`; // Return a unique file name for Firebase storage
   };
 
   // Pick image from media library
@@ -64,6 +64,7 @@ const CustomActions = ({
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status === "granted") {
       const result = await ImagePicker.launchImageLibraryAsync();
+      // If the user selects an image, proceed with upload
       if (!result.canceled && result.assets && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
       } else {
@@ -74,11 +75,12 @@ const CustomActions = ({
     }
   };
 
-  // Take a photo using the camera
+  // Take a photo using the device's camera
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status === "granted") {
       const result = await ImagePicker.launchCameraAsync();
+      // If the user takes a picture, proceed with upload
       if (!result.canceled && result.assets && result.assets.length > 0) {
         await uploadAndSendImage(result.assets[0].uri);
       } else {
@@ -97,6 +99,7 @@ const CustomActions = ({
     if (status === "granted") {
       try {
         const location = await Location.getCurrentPositionAsync({});
+        // If the location is successfully retrieved, send the message with location
         if (location) {
           onSend([
             {
@@ -119,21 +122,22 @@ const CustomActions = ({
     }
   };
 
-  // Upload image and send the message
+  // Upload image to Firebase storage and send the message with the image URL
   const uploadAndSendImage = async (imageURI) => {
     if (!imageURI) {
-      Alert.alert("Image URI is undefined.");
+      Alert.alert("Image URI is undefined."); // Alert if image URI is invalid
       return;
     }
 
-    const uniqueRefString = generateReference(imageURI);
-    const newUploadRef = ref(storage, uniqueRefString);
+    const uniqueRefString = generateReference(imageURI); // Generate unique reference for the image
+    const newUploadRef = ref(storage, uniqueRefString); // Create Firebase storage reference
 
     try {
       const response = await fetch(imageURI);
-      const blob = await response.blob();
-      const snapshot = await uploadBytes(newUploadRef, blob);
-      const imageURL = await getDownloadURL(snapshot.ref);
+      const blob = await response.blob(); // Convert the image to a Blob object
+      const snapshot = await uploadBytes(newUploadRef, blob); // Upload the Blob to Firebase storage
+      const imageURL = await getDownloadURL(snapshot.ref); // Get the URL for the uploaded image
+      // Send the message with image URL
       onSend([
         {
           createdAt: Timestamp.now(),
@@ -147,6 +151,7 @@ const CustomActions = ({
   };
 
   return (
+    // Touchable button for selection actions (image or location)
     <TouchableOpacity
       accessible={true}
       accessibilityLabel="Select optional actions"
@@ -163,9 +168,11 @@ const CustomActions = ({
 };
 
 // Custom render function for showing the MapView when a location is sent
+// Props: currentMessage contains message details, including location data
 export const renderCustomView = (props) => {
   const { currentMessage } = props;
 
+  // If the message contains location data, render the MapView
   if (currentMessage.location) {
     return (
       <MapView
@@ -179,7 +186,7 @@ export const renderCustomView = (props) => {
       />
     );
   }
-  return null;
+  return null; // If no location data, return nothing
 };
 
 const styles = StyleSheet.create({

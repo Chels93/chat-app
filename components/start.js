@@ -1,4 +1,3 @@
-// Start.js
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -8,24 +7,26 @@ import {
   ImageBackground,
   TouchableOpacity,
   Alert,
-  Platform, // Import Platform here
-  KeyboardAvoidingView, // Import KeyboardAvoidingView for proper functionality
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
-// Define the Start component, which receives navigation as a prop
+// Start component, which receives navigation as a prop
 const Start = ({ navigation }) => {
   // State to hold the user's name and selected background color
   const [name, setName] = useState("");
-  const auth = getAuth();
+  const auth = getAuth(); // Firebase authentication object
   const [bgColor, setBgColor] = useState("#fff");
   const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
 
   // Function to log in the user anonymously and navigate to the Chat screen
+  // Firebase sign-in and navigation to Chat screen are both handled here
   const loginUser = () => {
     signInAnonymously(auth)
       .then((result) => {
+        // Upon successful login, navigate to Chat screen with credentials
         navigation.navigate("Chat", {
           userID: result.user.uid,
           name,
@@ -40,6 +41,7 @@ const Start = ({ navigation }) => {
 
   return (
     <ImageBackground
+      // Background image for Start screen
       source={require("../assets/background-image.png")}
       style={styles.background}
     >
@@ -62,6 +64,8 @@ const Start = ({ navigation }) => {
             />
           ))}
         </View>
+
+        {/* Button to start the chat after signing in */}
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#757083" }]}
           onPress={loginUser}
@@ -72,6 +76,8 @@ const Start = ({ navigation }) => {
       {Platform.OS === "android" ? (
         <KeyboardAvoidingView behavior="height" />
       ) : null}
+
+      {/* Ensure the keyboard doesn't overlap the content based on the platform */}
       {Platform.OS === "ios" ? (
         <KeyboardAvoidingView behavior="padding" />
       ) : null}
