@@ -62,3 +62,4 @@ FIREBASE SETUP:
 DEPLOYMENT:
 - Start the Expo development server using: expo start
 - Run on Android/iOS emulator or scan QR code with Expo Go
+- GitHub Pages: https://github.com/Chels93/chat-app
